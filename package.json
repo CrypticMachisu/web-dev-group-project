@@ -1,0 +1,22 @@
+{
+  "name": "web-dev-group-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "club-data.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx live-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CrypticMachisu/web-dev-group-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CrypticMachisu/web-dev-group-project/issues"
+  },
+  "homepage": "https://github.com/CrypticMachisu/web-dev-group-project#readme",
+  "type": "commonjs"
+}

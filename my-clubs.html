@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubHub - My Clubs</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="navbar"></div>
+    
+    <main>
+        <div class="container">
+            <h1>My Clubs</h1>
+            <p class="text-muted">Clubs you've joined and upcoming events</p>
+            
+            <div id="myClubsContainer" class="mt-4">
+                <!-- My clubs will be rendered here -->
+            </div>
+        </div>
+    </main>
+    
+    <div id="footer"></div>
+    
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        function renderMyClubs() {
+            const container = document.getElementById('myClubsContainer');
+            const myClubIds = getMyClubs();
+            
+            if (myClubIds.length === 0) {
+                container.innerHTML = `
+                    <div class="card text-center">
+                        <h3>You haven't joined any clubs yet</h3>
+                        <p class="text-muted">Explore clubs and find your community!</p>
+                        <a href="clubs.html" class="btn btn-primary mt-2">Browse Clubs</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            const myClubs = clubs.filter(club => myClubIds.includes(club.id));
+            const upcomingEvents = events
+                .filter(event => myClubIds.includes(event.clubId))
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            container.innerHTML = `
+                <h2>My Clubs</h2>
+                <div class="card-grid mb-4">
+                    ${myClubs.map(club => `
+                        <div class="card">
+                            <h3>${club.name}</h3>
+                            <p>${club.description}</p>
+                            <span class="badge badge-primary">${club.category}</span>
+                            <div class="mt-2">
+                                <a href="club-detail.html?id=${club.id}" class="btn btn-primary">View Details</a>
+                                <button class="btn btn-danger" onclick="handleLeave(${club.id})">Leave Club</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <h2>Upcoming Events in My Clubs</h2>
+                ${upcomingEvents.length > 0 ? `
+                    <div class="card-grid">
+                        ${upcomingEvents.map(event => `
+                            <div class="card">
+                                <h4>${event.title}</h4>
+                                <p><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</p>
+                                <p><strong>Location:</strong> ${event.location}</p>
+                                <p>${event.description}</p>
+                                ${isSignedUp(event.id) 
+                                    ? `<span class="badge badge-success">✅ Signed Up</span>`
+                                    : `<button class="btn btn-primary" onclick="handleSignup(${event.id})">Sign Up</button>`
+                                }
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `<p class="text-muted">No upcoming events in your clubs.</p>`}
+            `;
+        }
+        
+        function handleLeave(clubId) {
+            if (leaveClub(clubId)) {
+                renderMyClubs();
+                showAlert('Successfully left the club.', 'info');
+            }
+        }
+        
+        function handleSignup(eventId) {
+            if (saveSignup(eventId)) {
+                renderMyClubs();
+                showAlert('Successfully signed up for the event!', 'success');
+            }
+        }
+        
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', renderMyClubs);
+    </script>
+</body>
+</html>

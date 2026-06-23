@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubHub - Club Details</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="navbar"></div>
+    
+    <main>
+        <div class="container">
+            <div id="clubDetailContainer">
+                <!-- Club details will be rendered here -->
+            </div>
+        </div>
+    </main>
+    
+    <div id="footer"></div>
+    
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        function getClubIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return parseInt(params.get('id'));
+        }
+        
+        function renderClubDetail() {
+            const container = document.getElementById('clubDetailContainer');
+            const clubId = getClubIdFromUrl();
+            const club = getClubById(clubId);
+            
+            if (!club) {
+                container.innerHTML = `
+                    <div class="card text-center">
+                        <h2>Club not found</h2>
+                        <a href="clubs.html" class="btn btn-primary">Back to Clubs</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            const isMember = isMember(club.id);
+            const clubEvents = getEventsForClub(club.id);
+            const clubSignups = clubEvents.filter(event => isSignedUp(event.id));
+            
+            container.innerHTML = `
+                <div class="card">
+                    <div class="d-flex justify-between align-center">
+                        <h1>${club.name}</h1>
+                        <span class="badge badge-primary">${club.category}</span>
+                    </div>
+                    <p class="text-muted">👥 ${club.seedMembers} members</p>
+                    <p>${club.description}</p>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        ${isMember 
+                            ? `<button class="btn btn-danger" onclick="handleLeave(${club.id})">Leave Club</button>`
+                            : `<button class="btn btn-success" onclick="handleJoin(${club.id})">Join Club</button>`
+                        }
+                        <a href="clubs.html" class="btn btn-outline">Back to Clubs</a>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <h2>Upcoming Events</h2>
+                    ${clubEvents.length > 0 ? `
+                        <div class="card-grid mt-3">
+                            ${clubEvents.map(event => `
+                                <div class="card">
+                                    <h4>${event.title}</h4>
+                                    <p><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</p>
+                                    <p><strong>Location:</strong> ${event.location}</p>
+                                    <p>${event.description}</p>
+                                    ${isSignedUp(event.id) 
+                                        ? `<span class="badge badge-success">✅ Signed Up</span>`
+                                        : `<button class="btn btn-primary" onclick="handleSignup(${event.id})">Sign Up</button>`
+                                    }
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : `<p class="text-muted">No upcoming events for this club.</p>`}
+                </div>
+            `;
+        }
+        
+        function handleJoin(clubId) {
+            if (joinClub(clubId)) {
+                renderClubDetail();
+                showAlert('Successfully joined the club!', 'success');
+            }
+        }
+        
+        function handleLeave(clubId) {
+            if (leaveClub(clubId)) {
+                renderClubDetail();
+                showAlert('Successfully left the club.', 'info');
+            }
+        }
+        
+        function handleSignup(eventId) {
+            if (saveSignup(eventId)) {
+                renderClubDetail();
+                showAlert('Successfully signed up for the event!', 'success');
+            }
+        }
+        
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', renderClubDetail);
+    </script>
+</body>
+</html>
