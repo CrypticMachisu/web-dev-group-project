@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubHub - Discover Clubs</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Content will be injected by components.js -->
+    
+    <div class="container">
+        <h1>🏛️ Discover Clubs & Events</h1>
+        <p class="text-muted">Find your community and join the activities that interest you.</p>
+        
+        <!-- Search and Filter -->
+        <div class="search-filter">
+            <input type="text" id="search-input" placeholder="Search clubs by name, category, or description...">
+            <select id="category-filter">
+                <option value="">All Categories</option>
+            </select>
+            <button id="search-btn" class="btn btn-primary">Search</button>
+        </div>
+        
+        <!-- Clubs Section -->
+        <h2>Clubs</h2>
+        <div id="clubs-container"></div>
+        
+        <!-- Events Section -->
+        <h2 class="mt-2">Upcoming Events</h2>
+        <div id="events-container"></div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>
