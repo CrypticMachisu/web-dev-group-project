@@ -61,10 +61,9 @@ function joinClub(clubId) {
 }
 
 function leaveClub(clubId) {
-  const memberships = getMyClubs();
-  const index = memberships.indexOf(clubId);
-  if (index !== -1) {
-      memberships.splice(index, 1);
+  let memberships = getMyClubs();
+  if (memberships.includes(clubId)) {
+      memberships = memberships.filter(id => id !== clubId);
       setStorageData(STORAGE_KEYS.MEMBERSHIPS, memberships);
       return true;
   }
@@ -76,21 +75,27 @@ function isMember(clubId) {
   return memberships.includes(clubId);
 }
 
-// ===== INTERFACE LINKING UTILITIES =====
-function getClubById(clubId) {
-  return (window.clubs || []).find(club => club.id === clubId);
-}
-
 function getClubsWithMembershipStatus() {
   const memberships = getMyClubs();
-  return (window.clubs || []).map(club => ({
+  return clubs.map(club => ({
       ...club,
       isMember: memberships.includes(club.id)
   }));
 }
 
+// ===== RETRIEVAL HELPERS =====
+function getClubById(clubId) {
+  return clubs.find(club => club.id === clubId);
+}
+
+function getEventsForClub(clubId) {
+  const seedEvents = events.filter(event => event.clubId === clubId);
+  const customEvents = getCustomEvents().filter(event => event.clubId === clubId);
+  return [...seedEvents, ...customEvents];
+}
+
 function getAllEventsWithClubInfo() {
-  const seedEvents = window.events || [];
+  const seedEvents = events;
   const customEvents = getCustomEvents();
   const allEvents = [...seedEvents, ...customEvents];
   
@@ -126,6 +131,13 @@ function updateEvent(eventId, updatedData) {
   return false;
 }
 
+function deleteEvent(eventId) {
+  let customEvents = getCustomEvents();
+  customEvents = customEvents.filter(e => e.id !== eventId);
+  setStorageData(STORAGE_KEYS.CUSTOM_EVENTS, customEvents);
+  return true;
+}
+
 function saveAnnouncement(clubId, text) {
   const announcements = getStorageData(STORAGE_KEYS.ANNOUNCEMENTS);
   const newAnnouncement = {
@@ -134,7 +146,7 @@ function saveAnnouncement(clubId, text) {
       text: text,
       date: new Date().toISOString()
   };
-  announcements.unshift(newAnnouncement); // Newest announcements first
+  announcements.unshift(newAnnouncement);
   setStorageData(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
   return true;
 }

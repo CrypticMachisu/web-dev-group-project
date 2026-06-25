@@ -12,8 +12,7 @@
     <main>
         <div class="container">
             <div id="clubDetailContainer">
-                <!-- Club details will be rendered here -->
-            </div>
+                </div>
         </div>
     </main>
     
@@ -43,42 +42,45 @@
                 return;
             }
             
-            const isMember = isMember(club.id);
+            // FIX: Renamed local constant variable to avoid shadowing global function isMember()
+            const memberStatus = isMember(club.id);
             const clubEvents = getEventsForClub(club.id);
-            const clubSignups = clubEvents.filter(event => isSignedUp(event.id));
             
             container.innerHTML = `
                 <div class="card">
                     <div class="d-flex justify-between align-center">
-                        <h1>${club.name}</h1>
+                        <h2>${club.name}</h2>
                         <span class="badge badge-primary">${club.category}</span>
                     </div>
+                    <p class="mt-2">${club.description}</p>
                     <p class="text-muted">👥 ${club.seedMembers} members</p>
-                    <p>${club.description}</p>
                     
-                    <div class="d-flex gap-2 mt-3">
-                        ${isMember 
+                    <div class="mt-3">
+                        ${memberStatus 
                             ? `<button class="btn btn-danger" onclick="handleLeave(${club.id})">Leave Club</button>`
                             : `<button class="btn btn-success" onclick="handleJoin(${club.id})">Join Club</button>`
                         }
-                        <a href="clubs.html" class="btn btn-outline">Back to Clubs</a>
                     </div>
                 </div>
                 
-                <div class="card mt-4">
-                    <h2>Upcoming Events</h2>
+                <div class="mt-4">
+                    <h3>Upcoming Events</h3>
                     ${clubEvents.length > 0 ? `
-                        <div class="card-grid mt-3">
+                        <div class="card-grid mt-2">
                             ${clubEvents.map(event => `
                                 <div class="card">
                                     <h4>${event.title}</h4>
-                                    <p><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</p>
-                                    <p><strong>Location:</strong> ${event.location}</p>
+                                    <p class="text-muted" style="font-size: 0.95rem;">
+                                        <strong>📅 Date:</strong> ${event.date} <br>
+                                        <strong>📍 Location:</strong> ${event.location}
+                                    </p>
                                     <p>${event.description}</p>
-                                    ${isSignedUp(event.id) 
-                                        ? `<span class="badge badge-success">✅ Signed Up</span>`
-                                        : `<button class="btn btn-primary" onclick="handleSignup(${event.id})">Sign Up</button>`
-                                    }
+                                    <div class="mt-2">
+                                        ${isSignedUp(event.id)
+                                            ? `<span class="badge badge-success">✓ Signed Up</span>`
+                                            : `<button class="btn btn-secondary btn-sm" onclick="handleSignup(${event.id})">Sign Up</button>`
+                                        }
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
