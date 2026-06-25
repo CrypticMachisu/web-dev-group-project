@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Clubs</title>
+
+```
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f4f4;
+    }
+
+    nav {
+        background-color: #333;
+        padding: 15px;
+    }
+
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+    }
+
+    h1 {
+        padding: 15px;
+    }
+
+    .card {
+        background: white;
+        margin: 15px;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    button {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+</style>
+```
+
+</head>
+<body>
+
+<nav>
+    <a href="club-list.html">Clubs</a>
+    <a href="event-list.html">Events</a>
+</nav>
+
+<h1>All Clubs</h1>
+
+<div id="clubs-container"></div>
+
+<script src="../js/data.js"></script>
+
+<script src="../js/storage.js"></script>
+
+<script src="../js/club-list.js"></script>
+
+</body>
+</html>
