@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Club Dashboard - Club Platform</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <main>
+    <p class="eyebrow">Committee dashboard</p>
+    <h1 id="club-name">Loading club…</h1>
+    <p id="club-description" class="event-meta"></p>
+
+    <section class="stats-row" id="stats-row">
+      <!-- filled by dashboard.js -->
+    </section>
+
+    <section class="panel">
+      <h2 id="form-heading">Create an event</h2>
+      <form id="event-form">
+        <div class="form-row">
+          <div>
+            <label for="event-title">Event title</label>
+            <input type="text" id="event-title" required />
+          </div>
+          <div>
+            <label for="event-date">Date</label>
+            <input type="date" id="event-date" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="event-location">Location</label>
+            <input type="text" id="event-location" required />
+          </div>
+        </div>
+        <label for="event-description">Description</label>
+        <textarea id="event-description" required></textarea>
+        <div class="btn-row">
+          <button type="submit" class="btn-primary" id="form-submit-btn">Add event</button>
+          <button type="button" class="btn-secondary" id="form-cancel-btn" hidden>Cancel edit</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Events &amp; sign-ups</h2>
+      <div id="events-list"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Members</h2>
+      <div id="members-list" class="member-list"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Post an announcement</h2>
+      <form id="announcement-form">
+        <textarea id="announcement-text" placeholder="What's new with the club?" required></textarea>
+        <div class="btn-row">
+          <button type="submit" class="btn-primary">Post announcement</button>
+        </div>
+      </form>
+      <div id="announcements-list" style="margin-top: 20px;"></div>
+    </section>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/components.js" defer></script>
+  <script src="js/dashboard.js" defer></script>
+</body>
+</html>
