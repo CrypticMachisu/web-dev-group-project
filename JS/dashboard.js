@@ -1,10 +1,5 @@
-// js/dashboard.js
-// Person 4 — club dashboard logic.
-// Manages a single hardcoded demo club for now (see DEMO_CLUB_ID below).
-// Swap this for a real club switcher later only if there's time left.
-
 const DEMO_CLUB_ID = 1;
-let editingEventId = null; // null = creating a new event, otherwise editing an existing one
+let editingEventId = null;
 
 function getClub() {
   return clubs.find((c) => c.id === DEMO_CLUB_ID);
@@ -31,70 +26,95 @@ function renderStats() {
   const club = getClub();
   const clubEvents = getClubEvents();
   const totalSignups = clubEvents.reduce((sum, e) => sum + signupCountFor(e), 0);
-  const totalMembers = (club?.seedMembers.length || 0) + (isMember(DEMO_CLUB_ID) ? 1 : 0);
+  
+  // FIX: Treat seedMembers as a primitive number, not an array
+  const totalMembers = (club?.seedMembers || 0) + (isMember(DEMO_CLUB_ID) ? 1 : 0);
 
   document.getElementById("stats-row").innerHTML = `
     <div class="stat-card">
-      <div class="stat-number">${clubEvents.length}</div>
-      <div class="stat-label">Events</div>
+      <div class="stat-num">${totalMembers}</div>
+      <div class="stat-label">Total Members</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number">${totalMembers}</div>
-      <div class="stat-label">Members</div>
+      <div class="stat-num">${clubEvents.length}</div>
+      <div class="stat-label">Events Hosted</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number">${totalSignups}</div>
-      <div class="stat-label">Total sign-ups</div>
+      <div class="stat-num">${totalSignups}</div>
+      <div class="stat-label">Event Sign-ups</div>
     </div>
   `;
 }
 
-function renderEvents() {
+function renderEventsList() {
   const clubEvents = getClubEvents();
   const container = document.getElementById("events-list");
 
   if (clubEvents.length === 0) {
-    container.innerHTML = `<p class="empty-state">No events yet — add your first one above.</p>`;
+    container.innerHTML = `<p class="empty-state">No events scheduled yet.</p>`;
     return;
   }
 
   container.innerHTML = clubEvents
-    .map((event) => {
-      const isCustom = !events.some((seed) => seed.id === event.id);
+    .map((e) => {
+      const isCustom = !events.some((seed) => seed.id === e.id);
       return `
-        <div class="event-card">
-          <div>
-            <div class="event-title">${escapeHtml(event.title)}</div>
-            <div class="event-meta">${formatDate(event.date)} · ${escapeHtml(event.location)}</div>
-          </div>
-          <div class="btn-row" style="margin-top:0; align-items:center;">
-            <span class="signup-badge">${signupCountFor(event)} signed up</span>
-            ${
-              isCustom
-                ? `<button type="button" class="btn-secondary" data-edit="${event.id}">Edit</button>
-                   <button type="button" class="btn-danger" data-delete="${event.id}">Delete</button>`
-                : `<span class="event-meta">Seed event</span>`
-            }
-          </div>
+      <div class="dashboard-event-item">
+        <div>
+          <h3>${escapeHtml(e.title)}</h3>
+          <span class="event-meta">📅 ${formatDate(e.date)} | 📍 ${escapeHtml(e.location)}</span>
+          <p style="margin: 4px 0 0 0; font-size: 0.9rem; color: #555;">${escapeHtml(e.description)}</p>
         </div>
-      `;
+        <div class="event-actions">
+          <span class="signup-badge">👥 ${signupCountFor(e)} sign-ups</span>
+          ${
+            isCustom
+              ? `
+            <button class="btn btn-secondary btn-sm" data-edit="${e.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-delete="${e.id}">Delete</button>
+          `
+              : `<span class="text-muted" style="font-size:0.8rem;">Seed Event</span>`
+          }
+        </div>
+      </div>
+    `;
     })
     .join("");
 
   container.querySelectorAll("[data-edit]").forEach((btn) => {
-    btn.addEventListener("click", () => startEditEvent(Number(btn.dataset.edit)));
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.edit);
+      const target = getCustomEvents().find((e) => e.id === id);
+      if (target) {
+        editingEventId = id;
+        document.getElementById("form-heading").textContent = "Edit Event";
+        document.getElementById("form-submit-btn").textContent = "Save Changes";
+        document.getElementById("form-cancel-btn").removeAttribute("hidden");
+
+        document.getElementById("event-title").value = target.title;
+        document.getElementById("event-date").value = target.date;
+        document.getElementById("event-location").value = target.location;
+        document.getElementById("event-description").value = target.description;
+        document.getElementById("event-form").scrollIntoView({ behavior: "smooth" });
+      }
+    });
   });
+
   container.querySelectorAll("[data-delete]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      deleteEvent(Number(btn.dataset.delete));
-      renderAll();
+      if(confirm("Are you sure you want to delete this event?")) {
+         deleteEvent(Number(btn.dataset.delete));
+         renderAll();
+      }
     });
   });
 }
 
 function renderMembers() {
   const club = getClub();
-  const members = club ? [...club.seedMembers] : [];
+  
+  // FIX: Generate placeholders safely matching the seed primitive count
+  const members = club ? Array.from({ length: club.seedMembers }, (_, i) => `Member #${i + 1}`) : [];
   if (isMember(DEMO_CLUB_ID)) members.push("You");
 
   document.getElementById("members-list").innerHTML = members
@@ -103,55 +123,45 @@ function renderMembers() {
 }
 
 function renderAnnouncements() {
-  const announcements = getAnnouncements(DEMO_CLUB_ID);
+  const list = getAnnouncements(DEMO_CLUB_ID);
   const container = document.getElementById("announcements-list");
 
-  if (announcements.length === 0) {
-    container.innerHTML = `<p class="empty-state">No announcements posted yet.</p>`;
+  if (list.length === 0) {
+    container.innerHTML = `<p class="text-muted" style="font-size:0.9rem;">No announcements posted yet.</p>`;
     return;
   }
 
-  container.innerHTML = announcements
+  container.innerHTML = list
     .map(
       (a) => `
-        <div class="announcement">
-          <div>${escapeHtml(a.text)}</div>
-          <div class="announcement-date">${formatDateTime(a.date)}</div>
-        </div>
-      `
+    <div class="announcement-card" style="background:#fdfdfd; border:1px solid #eee; padding:12px; margin-bottom:10px; border-radius:6px;">
+      <p style="margin:0 0 6px 0; font-size:0.95rem;">${escapeHtml(a.text)}</p>
+      <small style="color:#888;">Posted on: ${formatDateTime(a.date)}</small>
+    </div>
+  `
     )
     .join("");
+}
+
+function resetForm() {
+  editingEventId = null;
+  document.getElementById("form-heading").textContent = "Create an event";
+  document.getElementById("form-submit-btn").textContent = "Add event";
+  document.getElementById("form-cancel-btn").setAttribute("hidden", "true");
+  document.getElementById("event-form").reset();
 }
 
 function renderAll() {
   renderHeader();
   renderStats();
-  renderEvents();
+  renderEventsList();
   renderMembers();
   renderAnnouncements();
 }
 
-function startEditEvent(eventId) {
-  const event = getCustomEvents().find((e) => e.id === eventId);
-  if (!event) return;
-
-  editingEventId = eventId;
-  document.getElementById("event-title").value = event.title;
-  document.getElementById("event-date").value = event.date;
-  document.getElementById("event-location").value = event.location;
-  document.getElementById("event-description").value = event.description;
-  document.getElementById("form-heading").textContent = "Edit event";
-  document.getElementById("form-submit-btn").textContent = "Update event";
-  document.getElementById("form-cancel-btn").hidden = false;
-}
-
-function resetForm() {
-  editingEventId = null;
-  document.getElementById("event-form").reset();
-  document.getElementById("form-heading").textContent = "Create an event";
-  document.getElementById("form-submit-btn").textContent = "Add event";
-  document.getElementById("form-cancel-btn").hidden = true;
-}
+document.addEventListener("DOMContentLoaded", () => {
+  renderAll();
+});
 
 document.getElementById("event-form").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -184,7 +194,6 @@ document.getElementById("announcement-form").addEventListener("submit", (e) => {
   renderAnnouncements();
 });
 
-// --- tiny helpers ---
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
@@ -200,7 +209,5 @@ function formatDate(dateStr) {
 function formatDateTime(isoStr) {
   const d = new Date(isoStr);
   if (isNaN(d)) return isoStr;
-  return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'});
 }
-
-renderAll();

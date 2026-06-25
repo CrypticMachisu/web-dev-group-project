@@ -1,53 +1,157 @@
-function getJoinedClubs() {
-return JSON.parse(localStorage.getItem("joinedClubs")) || [];
+// ===== STORAGE KEYS =====
+const STORAGE_KEYS = {
+  SIGNUPS: 'club_signups',
+  MEMBERSHIPS: 'club_memberships',
+  CUSTOM_EVENTS: 'club_custom_events',
+  ANNOUNCEMENTS: 'club_announcements'
+};
+
+// ===== HELPER FUNCTIONS =====
+function getStorageData(key) {
+  try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
+  } catch (error) {
+      console.error(`Error reading ${key} from localStorage:`, error);
+      return [];
+  }
+}
+
+function setStorageData(key, data) {
+  try {
+      localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+      console.error(`Error writing ${key} to localStorage:`, error);
+  }
+}
+
+// ===== SIGNUP FUNCTIONS =====
+function getSignups() {
+  return getStorageData(STORAGE_KEYS.SIGNUPS);
+}
+
+function saveSignup(eventId) {
+  const signups = getSignups();
+  if (!signups.includes(eventId)) {
+      signups.push(eventId);
+      setStorageData(STORAGE_KEYS.SIGNUPS, signups);
+      return true;
+  }
+  return false;
+}
+
+function isSignedUp(eventId) {
+  const signups = getSignups();
+  return signups.includes(eventId);
+}
+
+// ===== MEMBERSHIP FUNCTIONS =====
+function getMyClubs() {
+  return getStorageData(STORAGE_KEYS.MEMBERSHIPS);
 }
 
 function joinClub(clubId) {
-let clubs = getJoinedClubs();
-
-```
-if (!clubs.includes(clubId)) {
-    clubs.push(clubId);
-    localStorage.setItem("joinedClubs", JSON.stringify(clubs));
-}
-```
-
+  const memberships = getMyClubs();
+  if (!memberships.includes(clubId)) {
+      memberships.push(clubId);
+      setStorageData(STORAGE_KEYS.MEMBERSHIPS, memberships);
+      return true;
+  }
+  return false;
 }
 
 function leaveClub(clubId) {
-let clubs = getJoinedClubs();
-
-```
-clubs = clubs.filter(id => id !== clubId);
-
-localStorage.setItem("joinedClubs", JSON.stringify(clubs));
-```
-
+  let memberships = getMyClubs();
+  if (memberships.includes(clubId)) {
+      memberships = memberships.filter(id => id !== clubId);
+      setStorageData(STORAGE_KEYS.MEMBERSHIPS, memberships);
+      return true;
+  }
+  return false;
 }
 
-function getRegisteredEvents() {
-return JSON.parse(localStorage.getItem("registeredEvents")) || [];
+function isMember(clubId) {
+  const memberships = getMyClubs();
+  return memberships.includes(clubId);
 }
 
-function registerEvent(eventId) {
-let events = getRegisteredEvents();
-
-```
-if (!events.includes(eventId)) {
-    events.push(eventId);
-    localStorage.setItem("registeredEvents", JSON.stringify(events));
-}
-```
-
+function getClubsWithMembershipStatus() {
+  const memberships = getMyClubs();
+  return clubs.map(club => ({
+      ...club,
+      isMember: memberships.includes(club.id)
+  }));
 }
 
-function unregisterEvent(eventId) {
-let events = getRegisteredEvents();
+// ===== RETRIEVAL HELPERS =====
+function getClubById(clubId) {
+  return clubs.find(club => club.id === clubId);
+}
 
-```
-events = events.filter(id => id !== eventId);
+function getEventsForClub(clubId) {
+  const seedEvents = events.filter(event => event.clubId === clubId);
+  const customEvents = getCustomEvents().filter(event => event.clubId === clubId);
+  return [...seedEvents, ...customEvents];
+}
 
-localStorage.setItem("registeredEvents", JSON.stringify(events));
-```
+function getAllEventsWithClubInfo() {
+  const seedEvents = events;
+  const customEvents = getCustomEvents();
+  const allEvents = [...seedEvents, ...customEvents];
+  
+  return allEvents.map(event => {
+      const club = getClubById(event.clubId);
+      return {
+          ...event,
+          clubName: club ? club.name : 'Unknown Club'
+      };
+  });
+}
 
+// ===== DASHBOARD INTEGRATION FUNCTIONS =====
+function getCustomEvents() {
+  return getStorageData(STORAGE_KEYS.CUSTOM_EVENTS);
+}
+
+function addEvent(newEvent) {
+  const customEvents = getCustomEvents();
+  customEvents.push(newEvent);
+  setStorageData(STORAGE_KEYS.CUSTOM_EVENTS, customEvents);
+  return true;
+}
+
+function updateEvent(eventId, updatedData) {
+  const customEvents = getCustomEvents();
+  const index = customEvents.findIndex(e => e.id === eventId);
+  if (index !== -1) {
+      customEvents[index] = { ...customEvents[index], ...updatedData };
+      setStorageData(STORAGE_KEYS.CUSTOM_EVENTS, customEvents);
+      return true;
+  }
+  return false;
+}
+
+function deleteEvent(eventId) {
+  let customEvents = getCustomEvents();
+  customEvents = customEvents.filter(e => e.id !== eventId);
+  setStorageData(STORAGE_KEYS.CUSTOM_EVENTS, customEvents);
+  return true;
+}
+
+function saveAnnouncement(clubId, text) {
+  const announcements = getStorageData(STORAGE_KEYS.ANNOUNCEMENTS);
+  const newAnnouncement = {
+      id: Date.now(),
+      clubId: clubId,
+      text: text,
+      date: new Date().toISOString()
+  };
+  announcements.unshift(newAnnouncement);
+  setStorageData(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+  return true;
+}
+
+function getAnnouncements(clubId) {
+  const announcements = getStorageData(STORAGE_KEYS.ANNOUNCEMENTS);
+  return announcements.filter(a => a.clubId === clubId);
 }
